@@ -70,7 +70,7 @@ ASA : real { RealS $1 }
 | '(' OpMult Args ')' { OpMultS $2 $3 }
 | '(' let '(' Binding ')' ASA ')' { LetS $4 $6 }
 | '(' let1 '(' Binding ')' ASA ')' { LetStarS $4 $6 }
-| '(' letrec '(' Binding ')' ASA ')' { LetRecS $4 $6 }
+| '(' letrec '(' ident ASA ')' ASA ')' { LetRecS [($4,$5)] $7 }
 | '(' lambda '(' Params ')' ASA ')' { FunS $4 $6}
 | '(' ASA Args ')' { AppS $2 $3 }
 | '(' if ASA ASA ASA ')' { IfS $3 $4 $5 }
@@ -82,7 +82,7 @@ OpUnario : add1 { "add1" }
 | not { "not" }
 | first { "first" }
 | last { "last" }
-| reverse { "last" }
+| reverse { "reverse" }
 | length { "length" }
 
 
@@ -163,6 +163,6 @@ instance Show SASA where
   show (ListRefS index list) = "(list-ref "++show index ++ " " ++ show list ++ ")"
   show (MapS lambda list) = "(map "++show lambda++" "++show list++")"
   show (FilterS lambda list) = "(filter "++show lambda++" "++show list++")"
-  show (LetRecS bind body) = "(letrec (" ++ init (foldl1 (++) ["[" ++ (fst x) ++ " " ++ show (snd x) ++ "] " | x <- bind]) ++ ") " ++ show body ++ ")"
+  show (LetRecS bind body) = "(letrec (" ++ (foldl1 (++) [(fst x) ++ " " ++ show (snd x) | x <- bind]) ++ ") " ++ show body ++ ")"
 
 }

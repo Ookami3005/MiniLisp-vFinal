@@ -31,8 +31,8 @@ data Token
   | TokenIf
   | TokenCond
   | TokenElse
-  | TokenList
   -- Nuevos
+  | TokenList
   | TokenQuot
   | TokenAppend
   | TokenListRef
@@ -76,6 +76,7 @@ instance Show Token where
   show TokenCond = "cond"
   show TokenIf = "if"
   show TokenElse = "else"
+  show TokenList = "list"
   show TokenAppend = "append"
   show TokenListRef = "list-ref"
   show TokenLength = "length"
@@ -153,6 +154,8 @@ lexer ('e' : 'x' : 'p' : 't' : xs) = TokenPow : lexer xs
 lexer ('f':'i':'l':'t':'e':'r':xs) = TokenFilter : lexer xs
 lexer ('f':'i':'r':'s':'t':xs) = TokenFirst : lexer xs
 lexer ('i':'f':xs) = TokenIf : lexer xs
+lexer ('l':'i':'s':'t':'-':'r':'e':'f':xs) = TokenListRef : lexer xs
+lexer ('l':'i':'s':'t':xs) = TokenList : lexer xs
 lexer ('s' : x : y : z : xs)
   | word == "ub1" = TokenDecr : lexer xs
   | word == "qrt" = TokenSqrt : lexer xs
@@ -176,7 +179,6 @@ lexer ('l':'e':'t':'r':'e':'c':xs) = TokenLetRec : lexer xs
 lexer ('l' : 'e' : 't' : '*' : xs) = TokenLetStar : lexer xs
 lexer ('l' : 'e' : 't' : xs) = TokenLet : lexer xs
 
-lexer ('l':'i':'s':'t':'-':'r':'e':'f':xs) = TokenListRef : lexer xs
 
 
 --
@@ -184,6 +186,7 @@ lexer ('l':'i':'s':'t':'-':'r':'e':'f':xs) = TokenListRef : lexer xs
 --
 lexer ('l':'a':'m':'b':'d':'a' : xs) = TokenLambda : lexer xs
 
+lexer ('r':'e':'v':'e':'r':'s':'e':xs) = TokenReverse : lexer xs
 
 -- Identificadores:
 --
@@ -199,7 +202,6 @@ lexer (x : xs)
     -- Función auxiliar. Además de aceptar como identificador cualquier letra, o cadena, tambien acepta como id simbolos especiales
     esParteDeIdentificador c = isAlphaNum c || elem c ['-', '_', '?', '!']
 
-lexer ('r':'e':'v':'e':'r':'s':'e':xs) = TokenReverse : lexer xs
 
 --
 -- Lexema no definido
