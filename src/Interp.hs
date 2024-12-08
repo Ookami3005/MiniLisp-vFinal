@@ -99,9 +99,17 @@ interp (OpBin "filter" fun@(Fun param body) (List (x:xs))) env
 
 interp (OpBin "append" arg1 arg2) env = CadenaV $ arg1'' ++ arg2''
   where arg1'= interp arg1 env
-        arg1'' = str $ strict $ arg1'
+        arg1'' = str $ strict arg1'
         arg2'= interp arg2 env
-        arg2'' = str $ strict $ arg2'
+        arg2'' = str $ strict arg2'
+
+interp (OpBin "appendlist" arg1 arg2) env = ListV (arg1'' ++ arg2'')
+  where
+    arg1' = interp arg1 env       
+    arg1'' = lst $ strict arg1'  
+    arg2' = interp arg2 env       
+    arg2'' = lst $ strict arg2'   
+
 
 interp (OpBin "<" arg1 arg2) env = BooleanV $ arg1'' < arg2''
   where (arg1', arg2') = (interp arg1 env, interp arg2 env)
