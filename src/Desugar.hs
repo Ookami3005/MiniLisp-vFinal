@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
 module Desugar where
 
 import Parser
@@ -17,6 +18,7 @@ data ASA
   | Fun String ASA
   | App ASA ASA
   | If ASA ASA ASA
+  | List [ASA]
 
 instance Show ASA where
   --
@@ -137,7 +139,7 @@ desugar (FilterS arg1 arg2) = OpBin "filter" (desugar arg1) (desugar arg2)
 
 desugar (ListRefS arg1 arg2) = OpBin "listref" (desugar arg1) (desugar arg2)
 
-desugar (ListS (x:xs)) List ([desugar y | y <- (x:xs)])
+desugar (ListS xs) = List [desugar y | y <- xs]
 
 desugar (OpMultS "append" [x]) = desugar x
 
