@@ -62,7 +62,6 @@ desugar (OpUnS op arg) = OpUn op (desugar arg)
 desugar (PowS base expt) = OpBin "expt" (desugar base) (desugar expt)
 
 desugar (OpMultS "append" [x]) = desugar x
-
 desugar (OpMultS "append" [x, y]) = OpBin "append" (desugar x) (desugar y)
 
 desugar (OpMultS "append" args@(x:y:xs)) =

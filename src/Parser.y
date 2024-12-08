@@ -61,6 +61,7 @@ ASA : real { RealS $1 }
 | boolean { BooleanS $1 }
 | ident { IdS $1 }
 | '"' ident '"' {CadenaS $2}
+| '(' list ')' {ListS []}
 | '(' list Args ')' {ListS $3}
 | '(' expt ASA ASA ')' { PowS $3 $4 }
 | '(' listref ASA ASA ')' { ListRefS $3 $4 }
@@ -75,6 +76,7 @@ ASA : real { RealS $1 }
 | '(' ASA Args ')' { AppS $2 $3 }
 | '(' if ASA ASA ASA ')' { IfS $3 $4 $5 }
 | '(' cond '(' Clauses ')' '(' else ASA ')' ')' {CondS $4 $8 }
+
 
 OpUnario : add1 { "add1" }
 | sub1 { "sub1" }

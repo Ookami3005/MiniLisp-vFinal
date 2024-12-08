@@ -48,6 +48,7 @@ instance Show Value where
   show :: Value -> String
   show (RealV n) = show n
   show (CadenaV cad) = show cad
+  show (ListV []) = "(list)"
   show (ListV list) = "(list "++init (foldl1 (++) [show x ++ " " | x <- list]) ++ ")"
   show (BooleanV b)
     | b = "#t"
@@ -85,6 +86,16 @@ interp (OpBin "list-ref" index list) env = [interp x env | x <- elems] !! (round
   where index'= interp index env
         index'' = num $ strict index'
         (List elems) = list
+
+interp (OpBin "map" fun (List list)) env = ListV $ [interp (App fun x) env| x <- list]
+
+interp (OpBin "filter" fun (List [])) env = ListV []
+interp (OpBin "filter" (Boolean b) list) env
+  | b = interp list env
+  | otherwise = ListV []
+interp (OpBin "filter" fun@(Fun param body) (List (x:xs))) env
+  | bool $ interp (App fun x) env = ListV $ (interp x env):(lst $ interp (OpBin "filter" fun (List xs)) env)
+  | otherwise = interp (OpBin "filter" fun (List xs)) env
 
 interp (OpBin "append" arg1 arg2) env = CadenaV $ arg1'' ++ arg2''
   where arg1'= interp arg1 env
