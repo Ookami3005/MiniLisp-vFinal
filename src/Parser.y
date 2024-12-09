@@ -44,6 +44,7 @@ else { TokenElse }
 '"' { TokenQuot }
 list { TokenList }
 append { TokenAppend }
+appendlist { TokenAppendList }
 listref { TokenListRef }
 length { TokenLength }
 letrec { TokenLetRec }
@@ -98,6 +99,7 @@ OpMult : '+' { "+" }
 | and { "and" }
 | or { "or" }
 | append { "append" }
+| appendlist { "append-list" }
 
 Binding : '[' ident ASA ']' { [($2,$3)] }
   | '[' ident ASA ']' Binding { ($2,$3):$5 }

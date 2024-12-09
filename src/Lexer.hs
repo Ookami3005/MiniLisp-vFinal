@@ -35,6 +35,7 @@ data Token
   | TokenList
   | TokenQuot
   | TokenAppend
+  | TokenAppendList
   | TokenListRef
   | TokenLength
   | TokenLetRec
@@ -78,6 +79,7 @@ instance Show Token where
   show TokenElse = "else"
   show TokenList = "list"
   show TokenAppend = "append"
+  show TokenAppendList = "append-list"
   show TokenListRef = "list-ref"
   show TokenLength = "length"
   show TokenLetRec = "letrec"
@@ -147,6 +149,7 @@ lexer expr@(x : xs)
 
 -- Palabras que representan operaciones
 lexer ('a' : 'd' : 'd' : '1' : xs) = TokenIncr : lexer xs
+lexer ('a':'p':'p':'e':'n':'d':'-':'l':'i':'s':'t':xs) = TokenAppendList : lexer xs
 lexer ('a':'p':'p':'e':'n':'d':xs) = TokenAppend : lexer xs
 lexer ('c':'o':'n':'d':xs) = TokenCond : lexer xs
 lexer ('e':'l':'s':'e':xs) = TokenElse : lexer xs

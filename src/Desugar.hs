@@ -67,6 +67,11 @@ desugar (OpMultS "append" [x, y]) = OpBin "append" (desugar x) (desugar y)
 desugar (OpMultS "append" args@(x:y:xs)) =
   OpBin "append" (desugar x) (desugar $ OpMultS "append" (y:xs))
 
+desugar (OpMultS "append-list" [x]) = desugar x
+desugar (OpMultS "append-list" [x, y]) = OpBin "append-list" (desugar x) (desugar y)
+
+desugar (OpMultS "append-list" args@(x:y:xs)) =
+  OpBin "append-list" (desugar x) (desugar $ OpMultS "append-list" (y:xs))
 
 --
 -- Desendulzado para cuando solo se recibe un argumento

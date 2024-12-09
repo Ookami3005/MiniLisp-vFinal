@@ -56,94 +56,101 @@ instance Show Value where
   show (Closure param cuerpo subenv) = "(lambda (" ++ param ++ ") " ++ show cuerpo ++ ")"
 
 interp :: ASA -> Env -> Value
-interp (Real n) env = RealV n
-interp (Boolean n) env = BooleanV n
-interp (Cadena cad) env = CadenaV cad
-interp (List list) env = ListV [interp x env| x <- list]
-interp (Id s) env = buscaEnAmbiente s env
+interp asa env = interp' asa (("Y",(Closure "f" (App (Fun "x" (App (Id "f") (App (Id "x") (Id"x")))) (Fun "x" (App (Id "f") (App (Id "x") (Id"x"))) )) [])):env)
 
-interp (OpUn "not" arg) env = BooleanV $ not $ arg''
-  where arg' = interp arg env
+interp' :: ASA -> Env -> Value
+interp' (Real n) env = RealV n
+interp' (Boolean n) env = BooleanV n
+interp' (Cadena cad) env = CadenaV cad
+interp' (List list) env = ListV [interp' x env| x <- list]
+interp' (Id s) env = buscaEnAmbiente s env
+
+interp' (OpUn "not" arg) env = BooleanV $ not $ arg''
+  where arg' = interp' arg env
         arg'' = bool $ strict arg'
 
-interp (OpUn "first" (List list)) env = interp (head $ list) env
-interp (OpUn "first" (Cadena cad)) env = CadenaV $ [head $ cad]
+interp' (OpUn "first" arg) env = head list
+  where arg' = interp' arg env
+        (ListV list) = strict arg'
 
-interp (OpUn "last" (List list)) env = interp (last $ list) env
-interp (OpUn "last" (Cadena cad)) env = CadenaV $ [last $ cad]
+interp' (OpUn "last" arg) env = last list
+  where arg' = interp' arg env
+        (ListV list) = strict arg'
 
-interp (OpUn "reverse" (List list)) env = ListV $ reverse $ [interp x env | x <- list]
-interp (OpUn "reverse" (Cadena cad)) env = CadenaV $ reverse $ cad
+interp' (OpUn "reverse" arg) env = ListV $ reverse list
+  where arg' = interp' arg env
+        (ListV list) = strict arg'
 
-interp (OpUn "length" (List list)) env = RealV $ fromIntegral $ length list
-interp (OpUn "length" (Cadena cad)) env = RealV $ fromIntegral $ length cad
+interp' (OpUn "length" arg) env = RealV $ fromIntegral $ length list
+  where arg' = interp' arg env
+        (ListV list) = strict arg'
 
-interp (OpUn op arg) env = RealV $ eligeOpUn op arg''
-  where arg' = interp arg env
+interp' (OpUn op arg) env = RealV $ eligeOpUn op arg''
+  where arg' = interp' arg env
         arg'' = num $ strict arg'
 
-interp (OpBin "list-ref" index list) env = [interp x env | x <- elems] !! (round index'')
-  where index'= interp index env
+interp' (OpBin "list-ref" index list) env = [interp' x env | x <- elems] !! (round index'')
+  where index'= interp' index env
         index'' = num $ strict index'
         (List elems) = list
 
-interp (OpBin "map" fun (List list)) env = ListV $ [interp (App fun x) env| x <- list]
+interp' (OpBin "map" fun (List list)) env = ListV $ [interp' (App fun x) env| x <- list]
 
-interp (OpBin "filter" fun (List [])) env = ListV []
-interp (OpBin "filter" (Boolean b) list) env
-  | b = interp list env
+interp' (OpBin "filter" fun (List [])) env = ListV []
+interp' (OpBin "filter" (Boolean b) list) env
+  | b = interp' list env
   | otherwise = ListV []
-interp (OpBin "filter" fun@(Fun param body) (List (x:xs))) env
-  | bool $ interp (App fun x) env = ListV $ (interp x env):(lst $ interp (OpBin "filter" fun (List xs)) env)
-  | otherwise = interp (OpBin "filter" fun (List xs)) env
+interp' (OpBin "filter" fun@(Fun param body) (List (x:xs))) env
+  | bool $ interp' (App fun x) env = ListV $ (interp' x env):(lst $ interp' (OpBin "filter" fun (List xs)) env)
+  | otherwise = interp' (OpBin "filter" fun (List xs)) env
 
-interp (OpBin "append" arg1 arg2) env = CadenaV $ arg1'' ++ arg2''
-  where arg1'= interp arg1 env
+interp' (OpBin "append" arg1 arg2) env = CadenaV $ arg1'' ++ arg2''
+  where arg1'= interp' arg1 env
         arg1'' = str $ strict arg1'
-        arg2'= interp arg2 env
+        arg2'= interp' arg2 env
         arg2'' = str $ strict arg2'
 
-interp (OpBin "appendlist" arg1 arg2) env = ListV (arg1'' ++ arg2'')
+interp' (OpBin "append-list" arg1 arg2) env = ListV (arg1'' ++ arg2'')
   where
-    arg1' = interp arg1 env       
+    arg1' = interp' arg1 env       
     arg1'' = lst $ strict arg1'  
-    arg2' = interp arg2 env       
+    arg2' = interp' arg2 env       
     arg2'' = lst $ strict arg2'   
 
 
-interp (OpBin "<" arg1 arg2) env = BooleanV $ arg1'' < arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin "<" arg1 arg2) env = BooleanV $ arg1'' < arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (num $ strict arg1', num $ strict arg2')
 
-interp (OpBin ">" arg1 arg2) env = BooleanV $ arg1'' > arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin ">" arg1 arg2) env = BooleanV $ arg1'' > arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (num $ strict arg1', num $ strict arg2')
 
-interp (OpBin "=" arg1 arg2) env = BooleanV $ arg1'' == arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin "=" arg1 arg2) env = BooleanV $ arg1'' == arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (num $ strict arg1', num $ strict arg2')
 
-interp (OpBin "and" arg1 arg2) env = BooleanV $ arg1'' && arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin "and" arg1 arg2) env = BooleanV $ arg1'' && arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (bool $ strict arg1', bool $ strict arg2')
 
-interp (OpBin "or" arg1 arg2) env = BooleanV $ arg1'' || arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin "or" arg1 arg2) env = BooleanV $ arg1'' || arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (bool $ strict arg1', bool $ strict arg2')
 
-interp (OpBin op arg1 arg2) env = RealV $ eligeOpBin op arg1'' arg2''
-  where (arg1', arg2') = (interp arg1 env, interp arg2 env)
+interp' (OpBin op arg1 arg2) env = RealV $ eligeOpBin op arg1'' arg2''
+  where (arg1', arg2') = (interp' arg1 env, interp' arg2 env)
         (arg1'', arg2'') = (num $ strict arg1', num $ strict arg2')
 
-interp (If cond thenExpr elseExpr) env
-  | interpCond = interp thenExpr env
-  | otherwise = interp elseExpr env
-    where interpCond = bool $ strict $ interp cond env
+interp' (If cond thenExpr elseExpr) env
+  | interp'Cond = interp' thenExpr env
+  | otherwise = interp' elseExpr env
+    where interp'Cond = bool $ strict $ interp' cond env
 
-interp (Fun param cuerpo) env = Closure param cuerpo env
+interp' (Fun param cuerpo) env = Closure param cuerpo env
 
-interp (App fun arg) env = interp cuerpo ((param,Snap arg env):subenv)
-  where (Closure param cuerpo subenv) = strict $ interp fun env
+interp' (App fun arg) env = interp' cuerpo ((param,Snap arg env):subenv)
+  where (Closure param cuerpo subenv) = strict $ interp' fun env
 
 strict :: Value -> Value
 strict (RealV n) = RealV n
@@ -151,4 +158,4 @@ strict (BooleanV b) = BooleanV b
 strict (CadenaV str) = CadenaV str
 strict (ListV list) = ListV list
 strict (Closure param body subenv) = Closure param body subenv
-strict (Snap expr subenv) = strict $ interp expr subenv
+strict (Snap expr subenv) = strict $ interp' expr subenv
